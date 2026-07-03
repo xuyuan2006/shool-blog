@@ -1,0 +1,33 @@
+<!-- --小许同学-- -->
+校园博客 (Campus Blog)
+├── server/                    # 后端 API 服务
+│   ├── package.json           # 依赖声明 (Express, SQLite3, JWT 等)
+│   ├── server.js              # Express 入口，挂载路由、中间件
+│   ├── db.js                  # SQLite 建表 + 种子数据 (默认模块、管理员)
+│   ├── email.js               # Nodemailer 邮件发送 (QQ SMTP)
+│   ├── .env.example           # 环境变量模板
+│   ├── middleware/
+│   │   ├── auth.js            # JWT 认证中间件 (verifyToken, requireAdmin)
+│   │   └── upload.js          # Multer 文件上传中间件 (头像/图片)
+│   ├── routes/
+│   │   ├── auth.js            # 认证路由：注册 / 登录 / 资料 / 头像 / 重置密码 / 用户列表
+│   │   ├── posts.js           # 帖子路由：CRUD / 点赞 / 分页 / 筛选 / 置顶
+│   │   ├── comments.js        # 评论路由：增删 + 嵌套回复
+│   │   ├── modules.js         # 分类路由：增删改查 (管理员)
+│   │   └── notifications.js   # 通知路由：列表 / 已读标记
+│   └── uploads/               # 上传文件存储目录 (头像、帖子配图)
+├── electron-app/              # Windows 桌面客户端
+│   ├── package.json           # Electron + electron-builder 配置
+│   ├── electron-main.js       # Electron 主进程 (窗口创建、IPC、托盘)
+│   ├── index.html             # 前端单页应用 (~2050 行)
+│   │                            #   - 玻璃拟态 UI + 渐变动画背景
+│   │                            #   - 暗色/亮色主题切换 + 自定义配色
+│   │                            #   - 侧边栏导航 (首页/发贴/我的)
+│   │                            #   - 帖子列表 + 详情 + 评论 + 点赞
+│   │                            #   - 用户设置面板
+│   └── dist/                  # 打包产物
+│       ├── 校园博客 Setup 1.0.0.exe   # NSIS 安装程序
+│       └── win-unpacked/              # 免安装版本
+├── .env                       # 根目录环境变量 (生产配置)
+├── PROJECT_STRUCTURE.txt      # 本文件 (项目结构说明)
+└── DEPLOYMENT.md              # 服务器部署指南

@@ -1,0 +1,2052 @@
+<!-- --小许同学-- -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园博客</title>
+  <style>
+    /* ===== CSS Variables & Theme System ===== */
+    :root {
+      --bg-primary: #f0f4f8;
+      --bg-secondary: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.25);
+      --bg-glass-hover: rgba(255, 255, 255, 0.35);
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aaa;
+      --border-color: rgba(255, 255, 255, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.08);
+      --accent-color: #4A90D9;
+      --accent-gradient: linear-gradient(135deg, #4A90D9, #6BB3E0);
+      --danger-color: #e74c3c;
+      --success-color: #2ecc71;
+      --card-bg: rgba(255, 255, 255, 0.4);
+      --input-bg: rgba(255, 255, 255, 0.6);
+      --scrollbar-track: rgba(0, 0, 0, 0.05);
+      --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+      --modal-overlay: rgba(0, 0, 0, 0.3);
+      --nav-bg: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #1a1a2e;
+      --bg-glass: rgba(255, 255, 255, 0.05);
+      --bg-glass-hover: rgba(255, 255, 255, 0.1);
+      --text-primary: #e0e0f0;
+      --text-secondary: #b0b0cc;
+      --text-muted: #6a6a8a;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --input-bg: rgba(255, 255, 255, 0.08);
+      --scrollbar-track: rgba(255, 255, 255, 0.05);
+      --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+      --modal-overlay: rgba(0, 0, 0, 0.6);
+      --nav-bg: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ===== Reset & Base ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Animated gradient background */
+    .bg-animation {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .bg-animation::before,
+    .bg-animation::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-animation::before {
+      width: 500px; height: 500px;
+      background: var(--accent-color);
+      top: -100px; right: -100px;
+    }
+
+    .bg-animation::after {
+      width: 400px; height: 400px;
+      background: hsl(calc(hue(var(--accent-color)) + 60), 70%, 60%);
+      bottom: -100px; left: -100px;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(50px, -50px) scale(1.1); }
+      50% { transform: translate(-30px, 30px) scale(0.95); }
+      75% { transform: translate(40px, 20px) scale(1.05); }
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+    /* ===== Window Controls (top bar) ===== */
+    .window-bar {
+      height: 32px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      cursor: move;
+      -webkit-app-region: drag;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .window-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .window-btn:hover { opacity: 0.8; }
+    .btn-minimize { background: #fbbf24; }
+    .btn-maximize { background: #34d399; }
+    .btn-close { background: #ef4444; }
+
+    /* ===== Main Layout ===== */
+    .app-container {
+      display: flex;
+      height: calc(100vh - 32px);
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 260px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .nav-section {
+      padding: 12px 8px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 12px 4px;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-glass-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--accent-gradient);
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(74, 144, 217, 0.3);
+    }
+
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 8px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* ===== Glass Card ===== */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: all 0.3s;
+    }
+
+    .glass-card:hover {
+      background: var(--bg-glass-hover);
+      box-shadow: 0 12px 40px var(--shadow-color);
+    }
+
+    /* ===== Main Content ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      padding: 16px 24px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .content-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .content-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: white;
+      box-shadow: 0 4px 15px rgba(74, 144, 217, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(74, 144, 217, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-glass-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-color);
+      color: white;
+    }
+
+    .btn-danger:hover { opacity: 0.9; }
+
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ===== Posts List ===== */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .post-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .post-item {
+      padding: 16px 20px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .post-item:not(:hover) {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px var(--shadow-color);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .post-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .post-meta {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .post-author {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .post-module-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--accent-gradient);
+      color: white;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .post-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .post-excerpt {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .post-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .post-image-preview {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .post-image-preview img {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    /* ===== Auth Pages ===== */
+    .auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+    }
+
+    .auth-card .logo {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .auth-card .auth-subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      font-size: 13px;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .auth-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      font-size: 12px;
+    }
+
+    .auth-link {
+      color: var(--accent-color);
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .auth-link:hover { opacity: 0.8; text-decoration: underline; }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--modal-overlay);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover { background: var(--bg-glass-hover); }
+
+    /* ===== Post Detail ===== */
+    .post-detail {
+      padding: 24px;
+    }
+
+    .post-detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .post-detail-content {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .post-detail-images {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .post-detail-images img {
+      max-width: 300px;
+      max-height: 300px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* ===== Settings Panel ===== */
+    .settings-panel {
+      padding: 24px;
+    }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-label {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+
+    .color-picker-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-primary); }
+
+    .theme-toggle {
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+      background: var(--input-bg);
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .theme-btn.active {
+      border-color: var(--accent-color);
+      background: var(--accent-gradient);
+      color: white;
+    }
+
+    /* ===== User Menu ===== */
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      overflow: hidden;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .user-avatar-btn:hover { border-color: var(--accent-color); }
+
+    .user-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      min-width: 180px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s;
+      overflow: hidden;
+    }
+
+    .dropdown-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .dropdown-item:hover { background: var(--bg-glass); }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed;
+      top: 40px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px var(--shadow-color);
+      font-size: 13px;
+      color: var(--text-primary);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+      max-width: 320px;
+    }
+
+    .toast.success { border-left: 3px solid var(--success-color); }
+    .toast.error { border-left: 3px solid var(--danger-color); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100px); }
+    }
+
+    /* ===== Loading ===== */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== Empty State ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .text { font-size: 14px; }
+
+    /* ===== Pagination ===== */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .page-btn:hover { background: var(--bg-glass-hover); }
+    .page-btn.active { background: var(--accent-gradient); color: white; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ===== Search Bar ===== */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0 12px;
+      transition: all 0.2s;
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+    }
+
+    .search-bar input {
+      border: none;
+      background: transparent;
+      padding: 8px;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      width: 200px;
+    }
+
+    .search-bar .search-icon {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ===== Responsive adjustments ===== */
+    .hidden { display: none !important; }
+
+    /* ===== Editor ===== */
+    .editor-toolbar {
+      display: flex;
+      gap: 4px;
+      padding: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .editor-area {
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* ===== Comment Section ===== */
+    .comment-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      padding: 12px 0;
+    }
+
+    .comment-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .comment-body {
+      flex: 1;
+    }
+
+    .comment-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .comment-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .comment-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* ===== Image Upload ===== */
+    .image-upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 12px;
+    }
+
+    .image-upload-area:hover {
+      border-color: var(--accent-color);
+      background: var(--bg-glass);
+    }
+
+    .image-upload-area .icon { font-size: 24px; color: var(--text-muted); }
+    .image-upload-area .text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .uploaded-images {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .uploaded-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 6px;
+      object-fit: cover;
+      position: relative;
+    }
+
+    .uploaded-img .remove-btn {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== Notification Badge ===== */
+    .notif-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Animation -->
+  <div class="bg-animation"></div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Window Bar -->
+  <div class="window-bar">
+    <span class="window-title">校园博客</span>
+    <div class="window-controls">
+      <button class="window-btn btn-minimize" onclick="window.minimize()" title="最小化"></button>
+      <button class="window-btn btn-maximize" onclick="window.maximize()" title="最大化"></button>
+      <button class="window-btn btn-close" onclick="window.close()" title="关闭"></button>
+    </div>
+  </div>
+
+  <!-- Main App Container -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">校园博客</div>
+        <div class="logo-sub">Campus Blog</div>
+      </div>
+
+      <nav class="nav-section" id="navSection">
+        <div class="nav-section-title">导航</div>
+        <div class="nav-item active" data-page="home" onclick="navigateTo('home')">
+          <span class="icon">🏠</span> 首页
+        </div>
+        <div class="nav-item" data-page="create" onclick="navigateTo('create')">
+          <span class="icon">✏️</span> 发帖
+        </div>
+        <div class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+          <span class="icon">⚙️</span> 设置
+        </div>
+      </nav>
+
+      <nav class="nav-section" id="moduleNav">
+        <div class="nav-section-title">模块</div>
+        <!-- Modules loaded dynamically -->
+      </nav>
+
+      <div class="sidebar-footer" id="sidebarFooter">
+        <!-- Auth state loaded dynamically -->
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header -->
+      <div class="content-header">
+        <h1 class="content-title" id="pageTitle">首页</h1>
+        <div class="content-actions">
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索帖子..." id="searchInput" onkeyup="handleSearch(event)">
+          </div>
+          <div id="headerActions"></div>
+        </div>
+      </div>
+
+      <!-- Content Body -->
+      <div class="content-body" id="contentBody">
+        <!-- Pages rendered dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal glass-card" id="modalContent" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">标题</h2>
+        <button class="modal-close" onclick="hideModal()">✕</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Post Detail Modal -->
+  <div class="modal-overlay" id="postDetailOverlay" onclick="closePostDetail(event)">
+    <div class="modal glass-card" id="postDetailContent" onclick="event.stopPropagation()" style="max-width:700px">
+      <div class="modal-header">
+        <h2 class="modal-title" id="postDetailTitle">帖子详情</h2>
+        <button class="modal-close" onclick="hidePostDetail()">✕</button>
+      </div>
+      <div id="postDetailBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Configuration =====
+    const API_BASE = 'http://服务器ip地址:3000/api';
+
+    // ===== State =====
+    let state = {
+      currentUser: null,
+      token: null,
+      theme: 'light',
+      themeColor: '#4A90D9',
+      currentPage: 'home',
+      currentModule: null,
+      currentPageNum: 1,
+      modules: [],
+      posts: [],
+      searchQuery: ''
+    };
+
+    // ===== Utility Functions =====
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...options.headers };
+      if (state.token) {
+        headers['Authorization'] = `Bearer ${state.token}`;
+      }
+
+      const res = await fetch(API_BASE + endpoint, {
+        ...options,
+        headers
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || '请求失败');
+      }
+      return data;
+    }
+
+    // ===== Theme Management =====
+    function applyTheme(theme, color) {
+      state.theme = theme;
+      state.themeColor = color;
+
+      const root = document.documentElement;
+      root.setAttribute('data-theme', theme);
+
+      // Apply accent color
+      const hue = hexToHue(color);
+      root.style.setProperty('--accent-color', color);
+      root.style.setProperty('--accent-gradient', `linear-gradient(135deg, ${color}, hsl(${hue}, 70%, 70%))`);
+
+      // Save to localStorage
+      localStorage.setItem('blog-theme', theme);
+      localStorage.setItem('blog-theme-color', color);
+
+      // Sync with Electron window if available
+      try {
+        if (window.electronAPI) {
+          window.electronAPI.setTheme(theme);
+        }
+      } catch(e) {}
+    }
+
+    function hexToHue(hex) {
+      const r = parseInt(hex.slice(1,3), 16) / 255;
+      const g = parseInt(hex.slice(3,5), 16) / 255;
+      const b = parseInt(hex.slice(5,7), 16) / 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let h;
+      if (max === min) h = 0;
+      else if (max === r) h = 60 * ((g-b)/(max-min));
+      else if (max === g) h = 60 * (2 + (b-r)/(max-min));
+      else h = 60 * (4 + (r-g)/(max-min));
+      if (h < 0) h += 360;
+      return Math.round(h);
+    }
+
+    // ===== Auth Management =====
+    function checkAuth() {
+      const token = localStorage.getItem('blog-token');
+      const user = localStorage.getItem('blog-user');
+      if (token && user) {
+        state.token = token;
+        state.currentUser = JSON.parse(user);
+        updateAuthUI();
+      }
+    }
+
+    function saveAuth(token, user) {
+      state.token = token;
+      state.currentUser = user;
+      localStorage.setItem('blog-token', token);
+      localStorage.setItem('blog-user', JSON.stringify(user));
+      updateAuthUI();
+    }
+
+    function logout() {
+      state.token = null;
+      state.currentUser = null;
+      localStorage.removeItem('blog-token');
+      localStorage.removeItem('blog-user');
+      updateAuthUI();
+      navigateTo('home');
+      showToast('已退出登录', 'info');
+    }
+
+    function updateAuthUI() {
+      const footer = document.getElementById('sidebarFooter');
+      const headerActions = document.getElementById('headerActions');
+
+      if (state.currentUser) {
+        const initials = state.currentUser.username.substring(0, 2);
+        const avatarHtml = state.currentUser.avatar
+          ? `<img src="${state.currentUser.avatar}" alt="">`
+          : initials;
+
+        footer.innerHTML = `
+          <div class="nav-item" onclick="showProfileMenu()" style="padding:8px 12px;">
+            <div class="user-avatar-btn">${avatarHtml}</div>
+            <span>${state.currentUser.username}</span>
+          </div>
+        `;
+
+        headerActions.innerHTML = `
+          <div class="user-menu">
+            <div class="user-avatar-btn" onclick="toggleDropdown()" style="cursor:pointer;">${avatarHtml}</div>
+            <div class="dropdown-menu" id="userDropdown">
+              <div class="dropdown-item" onclick="navigateTo('settings')">⚙️ 设置</div>
+              ${state.currentUser.role === 'admin' ? '<div class="dropdown-item" onclick="showAdminPanel()">👑 管理面板</div>' : ''}
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" onclick="logout()">🚪 退出登录</div>
+            </div>
+          </div>
+        `;
+      } else {
+        footer.innerHTML = `
+          <div class="nav-item" onclick="showLoginPage()">🔑 登录</div>
+          <div class="nav-item" onclick="showRegisterPage()">📝 注册</div>
+        `;
+        headerActions.innerHTML = `
+          <button class="btn btn-secondary btn-sm" onclick="showLoginPage()">登录</button>
+        `;
+      }
+    }
+
+    function toggleDropdown() {
+      const dropdown = document.getElementById('userDropdown');
+      dropdown.classList.toggle('open');
+      // Close on outside click
+      setTimeout(() => {
+        const close = (e) => {
+          if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
+            document.removeEventListener('click', close);
+          }
+        };
+        document.addEventListener('click', close);
+      }, 0);
+    }
+
+    // ===== Navigation =====
+    function navigateTo(page, data) {
+      state.currentPage = page;
+      state.currentModule = null;
+
+      // Update nav active state
+      document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+        el.classList.toggle('active', el.dataset.page === page);
+      });
+
+      const pageTitle = document.getElementById('pageTitle');
+      const contentBody = document.getElementById('contentBody');
+
+      switch(page) {
+        case 'home':
+          pageTitle.textContent = '首页';
+          loadPosts();
+          break;
+        case 'create':
+          if (!state.currentUser) {
+            showToast('请先登录', 'error');
+            showLoginPage();
+            return;
+          }
+          pageTitle.textContent = '发布帖子';
+          renderCreatePost();
+          break;
+        case 'settings':
+          pageTitle.textContent = '设置';
+          renderSettings();
+          break;
+        case 'login':
+          pageTitle.textContent = '登录';
+          renderLogin();
+          break;
+        case 'register':
+          pageTitle.textContent = '注册';
+          renderRegister();
+          break;
+        default:
+          pageTitle.textContent = '首页';
+          loadPosts();
+      }
+    }
+
+    function loadModules() {
+      apiRequest('/modules').then(data => {
+        state.modules = data.modules;
+        renderModuleNav();
+      }).catch(() => {
+        // Use default modules if API fails
+        state.modules = [
+          { id: 1, name: '校园生活', icon: '🏫' },
+          { id: 2, name: '学术交流', icon: '📚' },
+          { id: 3, name: '情感天地', icon: '💭' },
+          { id: 4, name: '美食推荐', icon: '🍜' },
+          { id: 5, name: '旅游摄影', icon: '📷' },
+          { id: 6, name: '数码科技', icon: '💻' },
+          { id: 7, name: '音乐影视', icon: '🎬' },
+          { id: 8, name: '运动健身', icon: '⚽' },
+          { id: 9, name: '求助问答', icon: '❓' },
+          { id: 10, name: '二手交易', icon: '🔄' },
+        ];
+        renderModuleNav();
+      });
+    }
+
+    function renderModuleNav() {
+      const nav = document.getElementById('moduleNav');
+      let html = '<div class="nav-section-title">模块</div>';
+      state.modules.forEach(mod => {
+        html += `
+          <div class="nav-item" data-module="${mod.id}" onclick="filterByModule(${mod.id}, '${mod.name}')">
+            <span class="icon">${mod.icon || '📁'}</span> ${mod.name}
+          </div>
+        `;
+      });
+      nav.innerHTML = html;
+    }
+
+    function filterByModule(moduleId, moduleName) {
+      state.currentPage = 'home';
+      state.currentModule = moduleId;
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      document.getElementById('pageTitle').textContent = moduleName;
+      loadPosts(moduleId);
+    }
+
+    // ===== Posts =====
+    function loadPosts(moduleId, page) {
+      const contentBody = document.getElementById('contentBody');
+      contentBody.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+
+      const params = new URLSearchParams({
+        page: page || state.currentPageNum || 1,
+        limit: 10
+      });
+      if (moduleId) params.set('moduleId', moduleId);
+      if (state.searchQuery) params.set('search', state.searchQuery);
+
+      fetch(API_BASE + '/posts?' + params.toString())
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data.length > 0) {
+            state.posts = data.data;
+            renderPosts(data.data, data.pagination);
+          } else {
+            renderEmpty('还没有帖子，快来发第一帖吧！');
+          }
+        })
+        .catch(() => {
+          renderEmpty('加载失败，请检查网络连接');
+        });
+    }
+
+    function renderPosts(posts, pagination) {
+      const contentBody = document.getElementById('contentBody');
+      let html = '<div class="post-list">';
+
+      posts.forEach(post => {
+        const excerpt = post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content;
+        const timeAgo = getTimeAgo(post.created_at);
+        let images = [];
+      try {
+        images = post.image_urls && post.image_urls !== '' ? JSON.parse(post.image_urls) : [];
+      } catch(e) {
+        images = [];
+      }
+        const avatarInitial = post.avatar
+          ? `<img src="${API_BASE.replace('/api', '')}${post.avatar}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`
+          : post.username.charAt(0).toUpperCase();
+
+        html += `
+          <div class="post-item glass-card" onclick="showPostDetail(${post.id})">
+            <div class="post-header">
+              <div class="post-avatar">${avatarInitial}</div>
+              <div class="post-meta">
+                <span class="post-author">${escapeHtml(post.username)}</span>
+                ${post.module_name ? `<span class="post-module-badge">${post.module_icon || ''} ${escapeHtml(post.module_name)}</span>` : ''}
+                <span>${timeAgo}</span>
+              </div>
+            </div>
+            <div class="post-title">${escapeHtml(post.title)}</div>
+            <div class="post-excerpt">${escapeHtml(excerpt)}</div>
+            ${images.length > 0 ? `
+              <div class="post-image-preview">
+                ${images.map(img => `<img src="${API_BASE.replace('/api', '')}${img}" alt="">`).join('')}
+              </div>
+            ` : ''}
+            <div class="post-stats">
+              <span class="post-stat">👁 ${post.view_count || 0}</span>
+              <span class="post-stat">❤️ ${post.like_count || 0}</span>
+              <span class="post-stat">💬 ${post.comment_count || 0}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+
+      // Pagination
+      if (pagination && pagination.totalPages > 1) {
+        html += renderPagination(pagination);
+      }
+
+      contentBody.innerHTML = html;
+    }
+
+    function renderPagination(pagination) {
+      let html = '<div class="pagination">';
+      html += `<button class="page-btn" onclick="loadPosts(null, ${pagination.page - 1})" ${pagination.page <= 1 ? 'disabled' : ''}>‹</button>`;
+
+      for (let i = 1; i <= pagination.totalPages; i++) {
+        if (i === 1 || i === pagination.totalPages || Math.abs(i - pagination.page) <= 1) {
+          html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="loadPosts(null, ${i})">${i}</button>`;
+        } else if (Math.abs(i - pagination.page) === 2) {
+          html += '<span style="color:var(--text-muted)">...</span>';
+        }
+      }
+
+      html += `<button class="page-btn" onclick="loadPosts(null, ${pagination.page + 1})" ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>›</button>`;
+      html += '</div>';
+      return html;
+    }
+
+    function renderEmpty(message) {
+      document.getElementById('contentBody').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <div class="text">${message}</div>
+        </div>
+      `;
+    }
+
+    // ===== Post Detail =====
+    function showPostDetail(postId) {
+      fetch(API_BASE + '/posts/' + postId)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Post detail response:', data);
+          if (data.success) {
+            renderPostDetail(data.post);
+          } else {
+            showToast('加载失败: ' + data.message, 'error');
+          }
+        })
+        .catch(err => {
+          console.error('Post detail error:', err);
+          showToast('加载失败', 'error');
+        });
+    }
+
+    function renderPostDetail(post) {
+      const overlay = document.getElementById('postDetailOverlay');
+      const title = document.getElementById('postDetailTitle');
+      const body = document.getElementById('postDetailBody');
+
+      title.textContent = post.title;
+
+      let images = [];
+      try {
+        images = post.image_urls && post.image_urls !== '' ? JSON.parse(post.image_urls) : [];
+      } catch(e) {
+        images = [];
+      }
+      const timeAgo = getTimeAgo(post.created_at);
+      const canDelete = state.currentUser && (state.currentUser.id === post.user_id || state.currentUser.role === 'admin');
+
+      body.innerHTML = `
+        <div class="post-detail">
+          <div class="post-header" style="margin-bottom:16px;">
+            <div class="post-avatar">${post.avatar
+              ? `<img src="${API_BASE.replace('/api', '')}${post.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`
+              : post.username.charAt(0).toUpperCase()}</div>
+            <div class="post-meta" style="font-size:13px;">
+              <span class="post-author">${escapeHtml(post.username)}</span>
+              ${post.module_name ? `<span class="post-module-badge">${post.module_icon || ''} ${escapeHtml(post.module_name)}</span>` : ''}
+              <span>${timeAgo}</span>
+            </div>
+            ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">删除</button>` : ''}
+          </div>
+
+          <div class="post-detail-content">${escapeHtml(post.content)}</div>
+
+          ${images.length > 0 ? `
+            <div class="post-detail-images">
+              ${images.map(img => `<img src="${API_BASE.replace('/api', '')}${img}" alt="">`).join('')}
+            </div>
+          ` : ''}
+
+          <div class="post-stats" style="margin-top:16px;">
+            <span class="post-stat">👁 ${post.view_count || 0}</span>
+            <span class="post-stat">❤️ ${post.like_count || 0}</span>
+            <span class="post-stat">💬 评论</span>
+          </div>
+
+          <div class="comment-section">
+            <h3 style="font-size:14px;margin-bottom:12px;">评论</h3>
+            ${state.currentUser
+              ? `<div style="display:flex;gap:8px;margin-bottom:16px;">
+                   <input type="text" class="form-input" id="commentInput" placeholder="写下你的评论..." style="flex:1;">
+                   <button class="btn btn-primary btn-sm" onclick="submitComment(${post.id})">发送</button>
+                 </div>`
+              : '<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">登录后即可评论</p>'
+            }
+            <div id="commentsList">
+              <div class="loading"><div class="spinner"></div>加载评论中...</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      overlay.classList.add('active');
+
+      // Load comments
+      loadComments(post.id);
+    }
+
+    function hidePostDetail() {
+      document.getElementById('postDetailOverlay').classList.remove('active');
+    }
+
+    function closePostDetail(e) {
+      if (e.target === document.getElementById('postDetailOverlay')) {
+        hidePostDetail();
+      }
+    }
+
+    function loadComments(postId) {
+      fetch(API_BASE + '/comments/' + postId)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            renderComments(data.comments);
+          }
+        })
+        .catch(() => {
+          document.getElementById('commentsList').innerHTML = '<p style="color:var(--text-muted);font-size:12px;">评论加载失败</p>';
+        });
+    }
+
+    function renderComments(comments) {
+      const list = document.getElementById('commentsList');
+      if (!comments || comments.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">暂无评论</p>';
+        return;
+      }
+
+      let html = '';
+      comments.forEach(c => {
+        html += renderCommentItem(c);
+        if (c.replies && c.replies.length > 0) {
+          c.replies.forEach(r => {
+            html += `<div class="comment-item" style="margin-left:38px;">${renderCommentItem(r, true)}</div>`;
+          });
+        }
+      });
+      list.innerHTML = html;
+    }
+
+    function renderCommentItem(c, isReply = false) {
+      const timeAgo = getTimeAgo(c.created_at);
+      const canDelete = state.currentUser && (state.currentUser.id === c.user_id || state.currentUser.role === 'admin');
+      return `
+        <div class="comment-item">
+          <div class="comment-avatar">${c.avatar
+            ? `<img src="${API_BASE.replace('/api', '')}${c.avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`
+            : c.username.charAt(0).toUpperCase()}</div>
+          <div class="comment-body">
+            <div>
+              <span class="comment-author">${escapeHtml(c.username)}</span>
+              <span class="comment-time">${timeAgo}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(c.content)}</div>
+            ${canDelete ? `<button class="btn btn-danger btn-sm" style="margin-top:4px;padding:2px 8px;font-size:11px;" onclick="deleteComment(${c.id})">删除</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function submitComment(postId) {
+      const input = document.getElementById('commentInput');
+      const content = input.value.trim();
+      if (!content) return;
+
+      apiRequest('/comments', {
+        method: 'POST',
+        body: JSON.stringify({ postId, content })
+      }).then(() => {
+        showToast('评论成功', 'success');
+        input.value = '';
+        loadComments(postId);
+      }).catch(err => showToast(err.message, 'error'));
+    }
+
+    function deleteComment(commentId) {
+      apiRequest('/comments/' + commentId, { method: 'DELETE' })
+        .then(() => {
+          showToast('评论已删除', 'success');
+          // Reload current post detail
+          const title = document.getElementById('postDetailTitle').textContent;
+          // Find post by title text - simplified approach
+          loadPosts(state.currentModule);
+        })
+        .catch(err => showToast(err.message, 'error'));
+    }
+
+    function deletePost(postId) {
+      if (!confirm('确定要删除这篇帖子吗？')) return;
+
+      apiRequest('/posts/' + postId, { method: 'DELETE' })
+        .then(() => {
+          hidePostDetail();
+          showToast('帖子已删除', 'success');
+          loadPosts(state.currentModule);
+        })
+        .catch(err => showToast(err.message, 'error'));
+    }
+
+    // ===== Create Post =====
+    function renderCreatePost() {
+      let moduleOptions = state.modules.map(m =>
+        `<option value="${m.id}">${m.icon || ''} ${escapeHtml(m.name)}</option>`
+      ).join('');
+
+      document.getElementById('contentBody').innerHTML = `
+        <div style="max-width:700px;margin:0 auto;">
+          <div class="form-group">
+            <label class="form-label">标题</label>
+            <input type="text" class="form-input" id="postTitle" placeholder="请输入帖子标题" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">模块</label>
+            <select class="form-input" id="postModule">
+              <option value="">选择模块（可选）</option>
+              ${moduleOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">内容</label>
+            <textarea class="form-input editor-area" id="postContent" placeholder="写下你的想法..." rows="12"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">图片（可选）</label>
+            <div class="image-upload-area" onclick="document.getElementById('imageUpload').click()">
+              <div class="icon">📷</div>
+              <div class="text">点击上传图片</div>
+            </div>
+            <input type="file" id="imageUpload" accept="image/*" multiple style="display:none" onchange="handleImageUpload(this.files)">
+            <div class="uploaded-images" id="uploadedImages"></div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+            <button class="btn btn-secondary" onclick="navigateTo('home')">取消</button>
+            <button class="btn btn-primary" onclick="submitPost()">发布</button>
+          </div>
+        </div>
+      `;
+    }
+
+    let uploadedImages = [];
+
+    function handleImageUpload(files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImages.push(e.target.result);
+          renderUploadedImages();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderUploadedImages() {
+      const container = document.getElementById('uploadedImages');
+      if (!container) return;
+      container.innerHTML = uploadedImages.map((img, i) => `
+        <div style="position:relative;">
+          <img src="${img}" class="uploaded-img" alt="">
+          <button class="remove-btn" onclick="removeImage(${i})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      uploadedImages.splice(index, 1);
+      renderUploadedImages();
+    }
+
+    function submitPost() {
+      const title = document.getElementById('postTitle').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+      const moduleId = document.getElementById('postModule').value;
+
+      if (!title) { showToast('请输入标题', 'error'); return; }
+      if (!content) { showToast('请输入内容', 'error'); return; }
+
+      apiRequest('/posts', {
+        method: 'POST',
+        body: JSON.stringify({ title, content, moduleId: moduleId || null, images: uploadedImages })
+      }).then(() => {
+        showToast('发布成功！', 'success');
+        uploadedImages = [];
+        navigateTo('home');
+      }).catch(err => showToast(err.message, 'error'));
+    }
+
+    // ===== Auth Pages =====
+    function showLoginPage() {
+      navigateTo('login');
+    }
+
+    function renderLogin() {
+      document.getElementById('contentBody').innerHTML = `
+        <div class="auth-container">
+          <div class="auth-card glass-card">
+            <div class="logo">校园博客</div>
+            <p class="auth-subtitle">登录你的账号</p>
+            <form onsubmit="handleLogin(event)">
+              <div class="form-group">
+                <label class="form-label">邮箱</label>
+                <input type="email" class="form-input" id="loginEmail" placeholder="请输入邮箱" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="loginPassword" placeholder="请输入密码" required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;">登录</button>
+            </form>
+            <div class="auth-links">
+              <span class="auth-link" onclick="showRegisterPage()">还没有账号？注册</span>
+              <span class="auth-link" onclick="showToast('请联系管理员重置密码', 'info')">忘记密码？</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      }).then(data => {
+        saveAuth(data.token, data.user);
+        showToast('登录成功！', 'success');
+        navigateTo('home');
+        loadModules();
+      }).catch(err => showToast(err.message, 'error'));
+    }
+
+    function showRegisterPage() {
+      navigateTo('register');
+    }
+
+    function renderRegister() {
+      document.getElementById('contentBody').innerHTML = `
+        <div class="auth-container">
+          <div class="auth-card glass-card">
+            <div class="logo">校园博客</div>
+            <p class="auth-subtitle">创建你的账号</p>
+            <form onsubmit="handleRegister(event)">
+              <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="regUsername" placeholder="2-20个字符" required minlength="2" maxlength="20">
+              </div>
+              <div class="form-group">
+                <label class="form-label">邮箱</label>
+                <input type="email" class="form-input" id="regEmail" placeholder="请输入邮箱" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="regPassword" placeholder="至少6个字符" required minlength="6">
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;">注册</button>
+            </form>
+            <div class="auth-links">
+              <span class="auth-link" onclick="showLoginPage()">已有账号？登录</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('regUsername').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+
+      apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password })
+      }).then(data => {
+        if (data.autoLogin) {
+          // Auto login since email may not be configured
+          const mockUser = { id: data.user.id, username, email, role: 'user', theme: state.theme, theme_color: state.themeColor };
+          const mockToken = 'mock-' + Date.now();
+          // Store locally for demo
+          localStorage.setItem('blog-token', mockToken);
+          localStorage.setItem('blog-user', JSON.stringify(mockUser));
+          state.token = mockToken;
+          state.currentUser = mockUser;
+          updateAuthUI();
+          showToast('注册成功！', 'success');
+          navigateTo('home');
+        } else {
+          showToast(data.message, 'success');
+        }
+      }).catch(err => showToast(err.message, 'error'));
+    }
+
+    // ===== Settings =====
+    function renderSettings() {
+      const presetColors = [
+        '#4A90D9', '#E74C3C', '#2ECC71', '#F39C12',
+        '#9B59B6', '#1ABC9C', '#E67E22', '#3498DB',
+        '#E91E63', '#00BCD4', '#8BC34A', '#FF5722'
+      ];
+
+      const currentColorHex = state.themeColor;
+
+      document.getElementById('contentBody').innerHTML = `
+        <div style="max-width:600px;margin:0 auto;">
+          <div class="setting-group">
+            <div class="setting-label">主题模式</div>
+            <div class="theme-toggle">
+              <div class="theme-btn ${state.theme === 'light' ? 'active' : ''}" onclick="setTheme('light')">☀️ 浅色模式</div>
+              <div class="theme-btn ${state.theme === 'dark' ? 'active' : ''}" onclick="setTheme('dark')">🌙 深色模式</div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="setting-label">主题颜色</div>
+            <div class="color-picker-row">
+              ${presetColors.map(c => `
+                <div class="color-swatch ${c === currentColorHex ? 'active' : ''}"
+                     style="background:${c};"
+                     onclick="setThemeColor('${c}')"
+                     title="${c}"></div>
+              `).join('')}
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+              <input type="color" class="form-input" value="${currentColorHex}"
+                     onchange="setThemeColor(this.value)"
+                     style="width:50px;height:36px;padding:2px;cursor:pointer;">
+              <span style="font-size:12px;color:var(--text-muted);">自定义颜色</span>
+            </div>
+          </div>
+
+          ${state.currentUser ? `
+            <div class="setting-group">
+              <div class="setting-label">个人信息</div>
+              <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="profileUsername" value="${escapeHtml(state.currentUser.username)}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">简介</label>
+                <textarea class="form-input" id="profileBio" placeholder="介绍一下自己..." rows="3">${escapeHtml(state.currentUser.bio || '')}</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">头像</label>
+                <div class="image-upload-area" onclick="document.getElementById('avatarUpload').click()">
+                  <div class="icon">📷</div>
+                  <div class="text">点击上传头像</div>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="uploadAvatar(this.files[0])">
+                ${state.currentUser.avatar ? `<img src="${API_BASE.replace('/api', '')}${state.currentUser.avatar}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-top:8px;">` : ''}
+              </div>
+              <button class="btn btn-primary" onclick="updateProfile()">保存修改</button>
+            </div>
+          ` : ''}
+
+          <div class="setting-group" style="margin-top:30px;padding-top:20px;border-top:1px solid var(--border-color);">
+            <div class="setting-label">关于</div>
+            <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">
+              校园博客 v1.0.0<br>
+              一个属于校园人的博客平台<br>
+              技术支持：Node.js + Express + SQLite
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function setTheme(theme) {
+      applyTheme(theme, state.themeColor);
+      renderSettings();
+      showToast(`已切换到${theme === 'dark' ? '深色' : '浅色'}模式`, 'success');
+    }
+
+    function setThemeColor(color) {
+      applyTheme(state.theme, color);
+      renderSettings();
+      showToast('主题颜色已更新', 'success');
+    }
+
+    function updateProfile() {
+      const username = document.getElementById('profileUsername').value.trim();
+      const bio = document.getElementById('profileBio').value.trim();
+
+      apiRequest('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ username, bio })
+      }).then(data => {
+        state.currentUser = data.user;
+        localStorage.setItem('blog-user', JSON.stringify(data.user));
+        updateAuthUI();
+        showToast('个人资料已更新', 'success');
+      }).catch(err => showToast(err.message, 'error'));
+    }
+
+    function uploadAvatar(file) {
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      fetch(API_BASE + '/auth/avatar', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}` },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          state.currentUser.avatar = data.avatar;
+          localStorage.setItem('blog-user', JSON.stringify(state.currentUser));
+          updateAuthUI();
+          showToast('头像上传成功', 'success');
+          renderSettings();
+        } else {
+          showToast(data.message || '上传失败', 'error');
+        }
+      })
+      .catch(() => showToast('上传失败', 'error'));
+    }
+
+    function showAdminPanel() {
+      showToast('管理面板功能开发中...', 'info');
+    }
+
+    // ===== Search =====
+    function handleSearch(e) {
+      if (e.key === 'Enter') {
+        state.searchQuery = document.getElementById('searchInput').value.trim();
+        state.currentPageNum = 1;
+        loadPosts(state.currentModule);
+      }
+    }
+
+    // ===== Modal =====
+    function showModal(title, content) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = content;
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function hideModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('modalOverlay')) {
+        hideModal();
+      }
+    }
+
+    function showProfileMenu() {
+      showToast('用户菜单功能', 'info');
+    }
+
+    // ===== Utilities =====
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getTimeAgo(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = Math.floor((now - date) / 1000);
+
+      if (diff < 60) return '刚刚';
+      if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+      if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+      if (diff < 2592000) return Math.floor(diff / 86400) + '天前';
+      if (diff < 31536000) return Math.floor(diff / 2592000) + '个月前';
+      return Math.floor(diff / 31536000) + '年前';
+    }
+
+    // ===== Initialize =====
+    function init() {
+      // Load saved preferences
+      const savedTheme = localStorage.getItem('blog-theme') || 'light';
+      const savedColor = localStorage.getItem('blog-theme-color') || '#4A90D9';
+      applyTheme(savedTheme, savedColor);
+
+      // Check auth
+      checkAuth();
+
+      // Load modules
+      loadModules();
+
+      // Navigate to home
+      navigateTo('home');
+    }
+
+    // Start app
+    init();
+  </script>
+</body>
+</html>
