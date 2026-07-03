@@ -102,8 +102,23 @@ scp -r "文件地址\server\*" root@你的服务器IP:/opt/campus-blog/
 cd /opt/campus-blog
 npm install
 ```
-
 将安装以下依赖：express、sqlite3、bcryptjs、jsonwebtoken、multer、nodemailer、cors、helmet、express-rate-limit、cookie-parser、dotenv。
+
+如果出现核心报错
+Error: not found: make
+服务器缺少编译工具 make、gcc，安装 sqlite3 需要本地编译，缺编译环境直接失败
+```bash
+apt update
+apt install -y make gcc g++ python3
+```
+清理旧依赖缓存
+```bash
+rm -rf node_modules package-lock.json
+```
+然后重新安装依赖即可
+```bash
+npm install
+```
 
 ### 第 6 步：配置环境变量
 
